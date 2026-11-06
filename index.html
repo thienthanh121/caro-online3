@@ -1,0 +1,129 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CARO ONLINE</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#2f6fed"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Caro">
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mut:#6b7385;--x:#e5484d;--o:#2f6fed;--ac:#2f6fed;--bd:#dfe3ec}
+@media(prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b1f29;--tx:#e8ebf2;--mut:#939bb0;--bd:#2c3242}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px system-ui,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:980px;margin:0 auto;padding:14px}.hide{display:none!important}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px}
+h1{font-size:44px;letter-spacing:6px;margin:10px 0;text-align:center}h1 b{color:var(--x)}h1 i{color:var(--o);font-style:normal}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:11px 16px;border-radius:10px;cursor:pointer}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}button:disabled{opacity:.45;cursor:default}
+input{font:inherit;padding:11px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);width:100%}
+.col{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:0 auto}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#conn{position:fixed;top:8px;right:10px;font-size:13px;color:var(--mut)}#conn:before{content:"●";margin-right:5px;color:#e5484d}#conn.on:before{color:#2cb67d}
+.code{font-size:40px;letter-spacing:8px;text-align:center;font-weight:700;margin:8px 0}
+.pl{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+#game{display:grid;grid-template-columns:1fr 250px;gap:12px}@media(max-width:760px){#game{grid-template-columns:1fr}}
+.bar{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pc{flex:1;padding:8px 10px;border-radius:10px;border:2px solid transparent;background:var(--card)}
+.pc.turn{border-color:var(--ac);box-shadow:0 0 0 4px #2f6fed33;animation:pu 1.2s infinite}@keyframes pu{50%{box-shadow:0 0 0 8px #2f6fed11}}
+.pc small{color:var(--mut);display:block}.sx{color:var(--x);font-weight:800}.so{color:var(--o);font-weight:800}
+#tm{font-size:26px;font-weight:700;min-width:54px;text-align:center}#tm.low{color:var(--x)}
+#board{display:grid;grid-template-columns:repeat(15,1fr);width:min(100%,calc(100vh - 230px),640px);min-width:300px;margin:0 auto;aspect-ratio:1;background:var(--card);border:2px solid var(--bd);border-radius:8px;touch-action:manipulation}
+#board div{border:.5px solid var(--bd);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(11px,3.6vw,24px);cursor:pointer;user-select:none}
+#board div.x{color:var(--x)}#board div.o{color:var(--o)}#board div.last{background:#ffd54a55}#board div.w{background:#2cb67d88;animation:pop .6s infinite alternate}@keyframes pop{to{transform:scale(1.15)}}
+#hist{height:150px;overflow:auto;font-size:13px;color:var(--mut)}#chat{height:90px;overflow:auto;font-size:13px}
+.q button{padding:6px 9px;font-size:13px}
+#res{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9}
+#res .card{text-align:center;min-width:260px}#res h2{font-size:34px;margin:6px}
+#bn{display:none;background:#e5484d;color:#fff;padding:10px 14px;text-align:center;font-size:14px;line-height:1.4}#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;z-index:20}
+</style></head><body>
+<div id="bn"></div>
+<div id="conn">Đang kết nối…</div>
+<main>
+<section id="home" class="col"><h1><b>CA</b><i>RO</i></h1>
+ <div class="card col" style="max-width:none"><input id="nm" maxlength="16" placeholder="Biệt danh của bạn">
+  <button class="p" id="bCreate">👥 Chơi với bạn bè (Tạo phòng)</button>
+  <div class="row"><input id="cd" maxlength="6" placeholder="Mã phòng" style="flex:1;text-transform:uppercase"><button id="bJoin">Vào</button></div>
+  <button id="bFind">⚡ Tìm trận</button><div id="fnd" class="hide">Đang tìm đối thủ… <button id="bCan">Huỷ</button></div>
+  <button id="bHelp">📖 Hướng dẫn</button>
+  <div id="help" class="hide" style="color:var(--mut);font-size:14px">Bàn 15×15, X đi trước (ngẫu nhiên). Ai có 5 quân liên tiếp (ngang, dọc, chéo) thắng. Mỗi lượt 30 giây, hết giờ là thua. Tạo phòng, gửi mã 6 ký tự cho bạn, hoặc bấm Tìm trận để ghép ngẫu nhiên. Tải lại trang vẫn quay lại ván đang chơi.</div></div></section>
+<section id="lobby" class="card col hide"><div style="text-align:center;color:var(--mut)">Mã phòng</div><div class="code" id="lc"></div>
+ <button id="bCopy">📋 Sao chép mã</button><div id="lp"></div>
+ <button class="p" id="bStart" disabled>Bắt đầu</button><button id="bLeave1">Thoát phòng</button></section>
+<section id="game" class="hide"><div>
+ <div class="bar"><div class="pc" id="p0"></div><div id="tm">30</div><div class="pc" id="p1"></div></div>
+ <div id="board"></div>
+ <div class="row" style="justify-content:center;margin-top:10px"><span id="mc"></span><span id="op" style="color:var(--mut)"></span></div></div>
+ <div class="col" style="max-width:none">
+  <div class="card"><b>Nước đi</b><div id="hist"></div>
+   <div id="rp" class="row hide" style="margin-top:6px"><button id="r0">⏮</button><button id="r1">◀</button><button id="r2">▶</button><button id="r3">⏭</button></div></div>
+  <div class="card"><b>Chat</b><div id="chat"></div><div class="row q"></div></div>
+  <div class="row"><button id="bRe" class="hide p">Chơi lại</button><button id="bSnd">🔊</button><button id="bLeave2">Thoát</button></div></div></section>
+</main>
+<div id="res" class="hide"><div class="card"><h2 id="rt"></h2><p id="rs"></p><div class="row" style="justify-content:center"><button id="rRe" class="p">Chơi lại</button><button id="rView">Xem lại ván</button><button id="rLeave">Về phòng chờ</button></div></div></div>
+<script src="config.js"></script>
+<script>
+function banner(m){var b=document.getElementById('bn');if(!m){b.style.display='none';return}b.textContent=m;b.style.display='block'}
+(function(){var u=(window.SERVER_URL||'').replace(/\/$/,'');
+ var srcs=[u+'/socket.io/socket.io.js','https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js'];
+ function t(i){if(i>=srcs.length)return banner('Không tải được thư viện kết nối (socket.io). Kiểm tra mạng, hoặc SERVER_URL trong config.js có đúng địa chỉ backend không.');
+  var s=document.createElement('script');s.src=srcs[i];s.onload=function(){main()};s.onerror=function(){t(i+1)};document.head.append(s)}
+ t(0)})();
+function main(){
+if(location.protocol==='file:'&&!window.SERVER_URL){banner('Bạn đang mở file index.html trực tiếp trên máy nên không tạo được phòng. Hãy dùng link website sau khi deploy (hoặc chạy npm start rồi mở http://localhost:3000).');return}
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+const $=i=>document.getElementById(i),N=15;
+let tok=localStorage.ctok||(localStorage.ctok=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36)+Math.random().toString(36).slice(2)));
+$('nm').value=localStorage.cname||'';const name=()=>{localStorage.cname=$('nm').value.trim();return $('nm').value.trim()};
+const S=io(window.SERVER_URL||undefined,{reconnection:true});
+let st=null,t0=0,inRoom=false,rp=null,snd=localStorage.snd!=='0',lastN=0,hideRes=false,lastKey='';
+const show=id=>['home','lobby','game'].forEach(x=>$(x).classList.toggle('hide',x!==id));
+function toast(m){const d=document.createElement('div');d.id='toast';d.textContent=m;document.body.append(d);setTimeout(()=>d.remove(),2500)}
+let ac;function beep(f,d=.1,v=.15){if(!snd)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+S.on('connect',()=>{banner('');$('conn').textContent='Đã kết nối';$('conn').className='on';S.emit('hello',{token:tok})});
+S.on('disconnect',()=>{$('conn').textContent='Mất kết nối, đang thử lại…';$('conn').className=''});
+S.on('err',toast);
+const slow=setTimeout(()=>{if(!S.connected)banner('Chưa kết nối được server'+(window.SERVER_URL?' ('+window.SERVER_URL+')':'')+'. Nếu backend ở gói free của Render, server cần khoảng 1 phút để thức dậy – hãy chờ. Nếu vẫn lỗi: mở <địa chỉ server>/health phải thấy "ok"; kiểm tra SERVER_URL trong config.js và biến CORS_ORIGIN trên server.')},6000);
+S.on('connect_error',e=>{$('conn').textContent='Không kết nối được server'});
+const need=()=>{if(S.connected)return true;toast('Chưa kết nối server, vui lòng chờ…');return false};S.on('queued',()=>$('fnd').classList.remove('hide'));
+S.on('chat',m=>{const d=document.createElement('div');const n=st&&st.players[m.from]?st.players[m.from].name:'?';d.textContent=n+': '+m.text;$('chat').append(d);$('chat').scrollTop=1e9;beep(660,.05,.08)});
+S.on('state',s=>{
+ if(!s){if(inRoom)toast('Phòng không còn tồn tại.');inRoom=false;st=null;$('res').classList.add('hide');$('fnd').classList.add('hide');show('home');return}
+ const prev=st;st=s;t0=Date.now();inRoom=true;$('fnd').classList.add('hide');
+ if(!prev||prev.code!==s.code||(prev.status!=='playing'&&s.status==='playing')){rp=null;hideRes=false;lastN=0;$('chat').innerHTML=''}
+ render()});
+function render(){
+ if(st.status==='waiting'){show('lobby');$('lc').textContent=st.code;
+  $('lp').innerHTML=[0,1].map(i=>{const p=st.players[i];return `<div class="pl"><span>Người chơi ${i+1}${st.host===i?' (chủ phòng)':''}</span><span>${p?esc(p.name)+(p.on?'':' (mất kết nối)'):'Đang chờ…'}</span></div>`}).join('');
+  $('bStart').disabled=!(st.players.length===2&&st.host===st.you);$('bStart').textContent=st.host===st.you?'Bắt đầu':'Chờ chủ phòng bắt đầu';return}
+ show('game');const over=st.status==='over',L=st.moves.length,sh=rp==null?L:rp;
+ [0,1].forEach(i=>{const p=st.players[i];$('p'+i).innerHTML=`<span class="${i?'so':'sx'}">${i?'O':'X'}</span> ${esc(p.name)}${i===st.you?' (bạn)':''}<small>${p.on?'Online':'⚠ Mất kết nối'}</small>`;$('p'+i).classList.toggle('turn',!over&&st.turn===i)});
+ const opp=st.players[1-st.you];$('op').textContent=opp.on?'':'⚠ Đối thủ mất kết nối, đang chờ kết nối lại…';
+ $('mc').textContent='Lượt: '+L;
+ const b=$('board');if(!b.children.length)for(let i=0;i<N*N;i++){const c=document.createElement('div');c.dataset.i=i;b.append(c)}
+ const key=st.code+':'+sh;[...b.children].forEach(c=>{c.textContent='';c.className=''});
+ st.moves.slice(0,sh).forEach(([r,c],k)=>{const e=b.children[r*N+c];e.textContent=k%2?'O':'X';e.className=k%2?'o':'x';if(k===sh-1)e.classList.add('last')});
+ if(over&&sh===L&&st.line)st.line.forEach(([r,c])=>b.children[r*N+c].classList.add('w'));
+ $('hist').innerHTML=st.moves.map(([r,c],k)=>`<div${k<sh?'':' style="opacity:.35"'}>${k+1}. ${k%2?'O':'X'} ${String.fromCharCode(65+c)}${r+1}</div>`).join('');$('hist').scrollTop=1e9;
+ $('rp').classList.toggle('hide',!over);$('bRe').classList.toggle('hide',!over);
+ $('bRe').textContent=st.rematch[st.you]?'Đã xin chơi lại…':(st.rematch[1-st.you]?'Đối thủ muốn chơi lại – Đồng ý':'Chơi lại');
+ if(L>lastN&&lastN!==0||(L>0&&lastN===0&&!over))beep(L%2?520:420);lastN=L;
+ if(over&&!hideRes){const w=st.winner;$('res').classList.remove('hide');
+  $('rt').textContent=w==null?'Hòa':w===st.you?'🎉 Bạn thắng!':'😢 Bạn thua';
+  $('rs').textContent={five:'5 quân liên tiếp',timeout:'Hết giờ',left:'Đối thủ đã rời trận',draw:'Bàn cờ đã đầy'}[st.reason]||'';
+  $('rRe').textContent=$('bRe').textContent;if(w===st.you){beep(660,.15);setTimeout(()=>beep(880,.25),160)}else if(w!=null)beep(200,.4)}
+ else if(!over)$('res').classList.add('hide')}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+setInterval(()=>{if(!st||st.status!=='playing'){if(st)$('tm').textContent='–';return}
+ const s=Math.ceil(Math.max(0,st.left-(Date.now()-t0))/1000);$('tm').textContent=s;$('tm').className=s<=8?'low':''},250);
+$('board').onclick=e=>{const c=e.target.closest('div[data-i]');if(!c||!st||st.status!=='playing')return;
+ if(st.turn!==st.you)return toast('Chưa đến lượt bạn');const i=+c.dataset.i;S.emit('move',{r:i/N|0,c:i%N})};
+$('bCreate').onclick=()=>{if(need())S.emit('create',{name:name()})};
+$('bJoin').onclick=()=>{if(need())S.emit('join',{code:$('cd').value,name:name()})};
+$('bFind').onclick=()=>{if(need())S.emit('find',{name:name()})};$('bCan').onclick=()=>{S.emit('cancel');$('fnd').classList.add('hide')};
+$('bHelp').onclick=()=>$('help').classList.toggle('hide');
+$('bCopy').onclick=()=>{const t=st.code;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Đã sao chép: '+t)).catch(()=>prompt('Mã phòng:',t))};
+$('bStart').onclick=()=>S.emit('start');
+['bLeave1','bLeave2','rLeave'].forEach(i=>$(i).onclick=()=>S.emit('leave'));
+['bRe','rRe'].forEach(i=>$(i).onclick=()=>S.emit('rematch'));
+$('rView').onclick=()=>{hideRes=true;$('res').classList.add('hide')};
+const go=f=>()=>{if(!st)return;const L=st.moves.length,c=rp==null?L:rp;rp=Math.max(0,Math.min(L,f(c,L)));if(rp===L)rp=null;hideRes=true;render()};
+$('r0').onclick=go(()=>0);$('r1').onclick=go(c=>c-1);$('r2').onclick=go(c=>c+1);$('r3').onclick=go((c,L)=>L);
+$('bSnd').textContent=snd?'🔊':'🔇';$('bSnd').onclick=()=>{snd=!snd;localStorage.snd=snd?'1':'0';$('bSnd').textContent=snd?'🔊':'🔇'};
+['GG','Chơi hay!','Nhanh lên!','Chờ chút','😄','Ván nữa nhé'].forEach(t=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>S.emit('chat',{text:t});document.querySelector('.q').append(b)});
+}
+</script></body></html>

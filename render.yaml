@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: caro-online
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /health
+    plan: starter   # "free" sẽ ngủ sau ~15 phút không có truy cập -> xem README
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # dán chuỗi kết nối Postgres/Supabase trong dashboard
+      - key: CORS_ORIGIN
+        value: "*"
